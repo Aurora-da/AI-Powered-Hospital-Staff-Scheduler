@@ -1,23 +1,8 @@
-from dataclasses import dataclass
 import pandas as pd
 from ortools.sat.python import cp_model
 from excel_loader import StaffInfo, ShiftConfig
 from config import logger
 
-@dataclass
-class SwapCandidate:
-    """调班候选人"""
-    staff_id: str
-    name: str
-    original_shift_id: str
-    target_shift_id: str
-
-@dataclass
-class SwapPreferenceShift:
-    """调班偏好班次"""
-    shift_id: str
-    date: str
-    shift_type: str
 
 def solve_swap(
     staff_list: list[StaffInfo],
@@ -48,25 +33,20 @@ def solve_swap(
     model = cp_model.CpModel()
     swap_vars = {}
     
-    # 候选员工（排除原员工，或包含目标员工）
-    candidates = [s for s in staff_list if s.staff_id != original_staff.staff_id]
+    # 候选员工（排除原员工，需满足技能要求）
+    candidates = [s for s in staff_list
+                  if s.staff_id != original_staff.staff_id
+                  and s.skill_level >= original_shift.required_level]
     if target_staff and target_staff in candidates:
         candidates = [target_staff]  # 优先目标员工
-    
-    # 创建调班变量
+
+    if not candidates:
+        raise ValueError("未找到满足技能要求的候选员工")
+
     for staff in candidates:
         swap_vars[staff.staff_id] = model.NewBoolVar(f"swap_{staff.staff_id}")
-    
-    # 约束：仅选一个员工调班
+
     model.Add(sum(swap_vars.values()) == 1)
-    
-    # 约束：调班员工需满足班次要求
-    for staff in candidates:
-        model.Add(
-            swap_vars[staff.staff_id] == 1
-        ).OnlyEnforceIf(
-            staff.skill_level >= original_shift.required_level
-        )
     
     # 5. 求解
     solver = cp_model.CpSolver()

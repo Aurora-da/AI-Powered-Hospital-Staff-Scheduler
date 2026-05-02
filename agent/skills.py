@@ -7,13 +7,14 @@
 5. 偏好学习 - 学习并记录员工的排班偏好
 """
 import json
+import os
 import pandas as pd
 from dataclasses import dataclass, field
 from datetime import datetime
 from collections import Counter, defaultdict
 from ortools.sat.python import cp_model
 
-from config import logger, SHIFT_KEYWORDS, MAX_NIGHT_SHIFTS_PER_PERSON, MAX_CONSECUTIVE_SHIFTS, PREFERENCE_EXTRACT_PROMPT
+from config import DATA_DIR, logger, SHIFT_KEYWORDS, MAX_NIGHT_SHIFTS_PER_PERSON, MAX_CONSECUTIVE_SHIFTS, PREFERENCE_EXTRACT_PROMPT
 from excel_loader import load_staff_info, load_shift_config, StaffInfo, ShiftConfig
 from llm_client import chat
 
@@ -39,7 +40,7 @@ staff_preferences: dict[str, StaffPreference] = {}
 def detect_conflicts() -> str:
     """检测当前排班表中的所有冲突并给出建议"""
     try:
-        schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        schedule_df = pd.read_excel(os.path.join(DATA_DIR, "schedule_result.xlsx"), engine="openpyxl")
     except FileNotFoundError:
         return "未找到排班结果文件，请先生成排班"
 
@@ -141,7 +142,7 @@ def handle_emergency_substitution(staff_name: str, date: str, shift_type: str, r
 
     # 查找该日期和班次类型的排班（从已生成的排班表）
     try:
-        schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        schedule_df = pd.read_excel(os.path.join(DATA_DIR, "schedule_result.xlsx"), engine="openpyxl")
     except FileNotFoundError:
         return "未找到排班表，请先生成排班"
 
@@ -210,7 +211,7 @@ def handle_emergency_substitution(staff_name: str, date: str, shift_type: str, r
 def analyze_workload() -> str:
     """分析当前排班的工作量分布情况"""
     try:
-        schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        schedule_df = pd.read_excel(os.path.join(DATA_DIR, "schedule_result.xlsx"), engine="openpyxl")
     except FileNotFoundError:
         return "未找到排班结果文件，请先生成排班"
 
@@ -275,7 +276,7 @@ def analyze_workload() -> str:
 def evaluate_schedule_quality() -> str:
     """对当前排班表进行全面的质量评估"""
     try:
-        schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        schedule_df = pd.read_excel(os.path.join(DATA_DIR, "schedule_result.xlsx"), engine="openpyxl")
     except FileNotFoundError:
         return "未找到排班结果文件，请先生成排班"
 

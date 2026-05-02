@@ -163,7 +163,6 @@ python run_cli.py
 ├── .gitignore
 │
 ├── agent/                  # 核心智能体逻辑
-│   ├── __init__.py
 │   ├── main.py             # CLI 交互主循环
 │   ├── agent.py            # 意图识别（LLM）
 │   ├── config.py           # 配置项和常量

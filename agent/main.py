@@ -1,5 +1,6 @@
+import os
 import pandas as pd
-from config import logger, SHIFT_KEYWORDS
+from config import DATA_DIR, logger, SHIFT_KEYWORDS
 from excel_loader import load_staff_info, load_shift_config, StaffInfo, ShiftConfig
 from excel_exporter import export_schedule, export_history, export_swap_result
 from scheduler import solve_schedule
@@ -108,7 +109,7 @@ def handle_query_schedule(intent_result):
         return "查询排班失败：员工或班次数据为空"
     # 读取排班结果
     try:
-        schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        schedule_df = pd.read_excel(os.path.join(DATA_DIR, "schedule_result.xlsx"), engine="openpyxl")
     except FileNotFoundError:
         return "查询失败：未找到排班结果文件，请先生成排班"
     # 筛选查询结果

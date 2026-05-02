@@ -18,7 +18,6 @@ def chat(prompt: str) -> str:
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.2,
-        "response_format": {"type": "json_object"}
     }
     
     for retry in range(LLM_MAX_RETRIES):
