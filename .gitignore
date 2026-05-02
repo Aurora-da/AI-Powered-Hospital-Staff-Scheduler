@@ -11,9 +11,9 @@ __pycache__/
 .idea/
 
 # 数据目录（生成的排班结果）
-data/schedule_result.xlsx
-data/swap_history.xlsx
-data/schedule_history.xlsx
+agent/data/schedule_result.xlsx
+agent/data/swap_history.xlsx
+agent/data/schedule_history.xlsx
 
 # 操作系统
 .DS_Store

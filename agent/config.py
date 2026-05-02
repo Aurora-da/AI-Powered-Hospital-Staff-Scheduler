@@ -18,8 +18,9 @@ SILICONFLOW_API_KEY = os.getenv("SILICONFLOW_API_KEY")
 MODEL_NAME = os.getenv("SILICONFLOW_MODEL", "Qwen/Qwen3-Next-80B-A3B-Instruct")
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
 
-# 路径配置
-DATA_DIR = "data"
+# 路径配置（基于包路径，保证任何工作目录下都能找到）
+_PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(_PACKAGE_DIR, "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
     logger.info(f"创建数据目录: {DATA_DIR}")

@@ -1,7 +1,7 @@
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 
-from api.schemas import (
+from backend.schemas import (
     SwapRequest, QueryRequest, EmergencySubstituteRequest,
     LearnPreferenceRequest, ChatRequest,
 )
@@ -82,8 +82,12 @@ def get_shifts():
 
 @router.get("/schedule")
 def get_schedule():
+    """获取当前排班结果"""
+    from config import DATA_DIR
+    import os
+    path = os.path.join(DATA_DIR, "schedule_result.xlsx")
     try:
-        df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        df = pd.read_excel(path, engine="openpyxl")
         return df.to_dict(orient="records")
     except FileNotFoundError:
         return []
@@ -125,8 +129,11 @@ def swap_shift(req: SwapRequest):
 
 @router.post("/schedule/query")
 def query_schedule(req: QueryRequest):
+    from config import DATA_DIR
+    import os
+    path = os.path.join(DATA_DIR, "schedule_result.xlsx")
     try:
-        schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+        schedule_df = pd.read_excel(path, engine="openpyxl")
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="未找到排班结果文件，请先生成排班")
     filter_cond = pd.Series([True] * len(schedule_df))
@@ -226,8 +233,11 @@ def chat(req: ChatRequest):
                     except Exception as e:
                         response = f"调班失败: {str(e)}"
         elif intent.intent_type == "query_schedule":
+            from config import DATA_DIR
+            import os
+            path = os.path.join(DATA_DIR, "schedule_result.xlsx")
             try:
-                schedule_df = pd.read_excel("data/schedule_result.xlsx", engine="openpyxl")
+                schedule_df = pd.read_excel(path, engine="openpyxl")
                 filter_cond = pd.Series([True] * len(schedule_df))
                 if intent.staff_name:
                     filter_cond &= schedule_df["staff"] == intent.staff_name
@@ -258,7 +268,7 @@ def chat(req: ChatRequest):
         elif intent.intent_type == "show_preference":
             response = get_preference_report()
         else:
-            response = f"暂不支持该功能。我是医院智能排班与调班助手，可提供排班生成、调班、查询、冲突检测、紧急代班、工作量分析、质量评估、偏好管理等功能～"
+            response = "暂不支持该功能。我是医院智能排班与调班助手，可提供排班生成、调班、查询、冲突检测、紧急代班、工作量分析、质量评估、偏好管理等功能～"
         add_memory(req.message, response)
         return {"success": True, "response": response}
     except Exception as e:

@@ -28,7 +28,3 @@ class LearnPreferenceRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-
-
-class GenerateScheduleRequest(BaseModel):
-    pass
