@@ -1,0 +1,20 @@
+# 环境变量
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# IDE
+.idea/
+
+# 数据目录（生成的排班结果）
+data/schedule_result.xlsx
+data/swap_history.xlsx
+data/schedule_history.xlsx
+
+# 操作系统
+.DS_Store
+Thumbs.db
