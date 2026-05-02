@@ -84,7 +84,22 @@ SILICONFLOW_MODEL=Qwen/Qwen3-Next-80B-A3B-Instruct
 
 ### 5. 启动方式
 
-#### 🌐 Web 管理界面（推荐）
+#### 🐳 Docker 一键部署（推荐）
+
+```bash
+# 1. 配置 API Key
+cp .env.example .env
+# 编辑 .env，填入真实的 SILICONFLOW_API_KEY
+
+# 2. 一键启动
+docker compose up -d
+
+# 3. 访问 http://localhost:8000
+```
+
+> 排班结果文件持久化在 `agent/data/` 目录，容器重启不会丢失。
+
+#### 🌐 本地手动启动
 
 ```bash
 python run_api.py

@@ -1,0 +1,11 @@
+.git/
+.venv/
+.idea/
+.jbeval/
+__pycache__/
+*.pyc
+*.pyo
+.env.example
+README.md
+.DS_Store
+Thumbs.db
