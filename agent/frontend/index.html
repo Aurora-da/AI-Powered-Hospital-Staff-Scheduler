@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>医院智能排班系统</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">+</div>
+      <div class="brand-text">
+        <span class="brand-title">排班系统</span>
+        <span class="brand-subtitle">智能管理平台</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="dashboard" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>工作台</span>
+      </a>
+      <a class="nav-item" data-page="schedule" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>排班管理</span>
+      </a>
+      <a class="nav-item" data-page="swap" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span>调班管理</span>
+      </a>
+      <a class="nav-item" data-page="conflicts" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>冲突检测</span>
+      </a>
+      <a class="nav-item" data-page="emergency" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span>紧急代班</span>
+      </a>
+      <a class="nav-item" data-page="analytics" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>数据分析</span>
+      </a>
+      <a class="nav-item" data-page="preferences" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>偏好管理</span>
+      </a>
+      <a class="nav-item" data-page="chat" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>AI 对话</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="footer-text">v1.0.0</span>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="切换侧边栏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">
+        <h1 id="pageTitle">工作台</h1>
+      </div>
+      <div class="topbar-actions">
+        <span class="status-badge status-ok" id="apiStatus">● 系统在线</span>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="content-wrapper">
+      <!-- Dashboard -->
+      <section class="page active" id="page-dashboard">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="stat-spinner"></div></div>
+          <div class="stat-card"><div class="stat-spinner"></div></div>
+          <div class="stat-card"><div class="stat-spinner"></div></div>
+          <div class="stat-card"><div class="stat-spinner"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>最近排班预览</h3></div>
+          <div class="card-body"><div id="dashboardPreview" class="table-responsive"><p class="text-muted">加载中...</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>快速操作</h3></div>
+          <div class="card-body">
+            <div class="quick-actions">
+              <button class="btn btn-primary" onclick="App.navigate('schedule')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                生成排班
+              </button>
+              <button class="btn btn-outline" onclick="App.navigate('swap')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                调班处理
+              </button>
+              <button class="btn btn-outline" onclick="App.navigate('conflicts')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                检测冲突
+              </button>
+              <button class="btn btn-outline" onclick="App.navigate('chat')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                AI 助手
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Schedule -->
+      <section class="page" id="page-schedule">
+        <div class="card">
+          <div class="card-header"><h3>生成排班表</h3></div>
+          <div class="card-body">
+            <button class="btn btn-primary btn-lg" onclick="App.generateSchedule()" id="genScheduleBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              生成排班
+            </button>
+            <div id="scheduleResult" class="mt-3"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>当前排班表</h3></div>
+          <div class="card-body">
+            <div class="table-responsive" id="scheduleTable"><p class="text-muted">暂无排班数据，请先生成排班</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Swap -->
+      <section class="page" id="page-swap">
+        <div class="card">
+          <div class="card-header"><h3>调班管理</h3></div>
+          <div class="card-body">
+            <form id="swapForm" onsubmit="return App.handleSwap(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">员工姓名</label>
+                  <input class="form-input" name="staff_name" placeholder="如：张医生" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">日期</label>
+                  <input class="form-input" name="date" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">班次类型</label>
+                  <select class="form-input" name="shift_type" required>
+                    <option value="">请选择班次</option>
+                    <option value="早班">早班</option>
+                    <option value="中班">中班</option>
+                    <option value="夜班">夜班</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">目标调班员工（可选）</label>
+                  <input class="form-input" name="target_staff" placeholder="留空则系统自动选择">
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">提交调班</button>
+            </form>
+            <div id="swapResult" class="mt-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Conflicts -->
+      <section class="page" id="page-conflicts">
+        <div class="card">
+          <div class="card-header"><h3>冲突检测与预警</h3></div>
+          <div class="card-body">
+            <button class="btn btn-primary btn-lg" onclick="App.detectConflicts()" id="conflictBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              开始检测
+            </button>
+            <div id="conflictResult" class="mt-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Emergency -->
+      <section class="page" id="page-emergency">
+        <div class="card">
+          <div class="card-header"><h3>紧急代班</h3></div>
+          <div class="card-body">
+            <form id="emergencyForm" onsubmit="return App.handleEmergency(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">请假员工</label>
+                  <input class="form-input" name="staff_name" placeholder="如：张医生" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">日期</label>
+                  <input class="form-input" name="date" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">班次类型</label>
+                  <select class="form-input" name="shift_type" required>
+                    <option value="">请选择班次</option>
+                    <option value="早班">早班</option>
+                    <option value="中班">中班</option>
+                    <option value="夜班">夜班</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">原因</label>
+                  <input class="form-input" name="reason" placeholder="如：请假、生病" value="临时有事">
+                </div>
+              </div>
+              <button class="btn btn-warning" type="submit">查找代班人员</button>
+            </form>
+            <div id="emergencyResult" class="mt-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics -->
+      <section class="page" id="page-analytics">
+        <div class="card">
+          <div class="card-header"><h3>工作量分析</h3></div>
+          <div class="card-body">
+            <button class="btn btn-primary btn-lg" onclick="App.loadWorkload()" id="workloadBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              分析工作量
+            </button>
+            <div id="workloadResult" class="mt-3"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>排班质量评估</h3></div>
+          <div class="card-body">
+            <button class="btn btn-primary btn-lg" onclick="App.loadQuality()" id="qualityBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              评估质量
+            </button>
+            <div id="qualityResult" class="mt-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preferences -->
+      <section class="page" id="page-preferences">
+        <div class="card">
+          <div class="card-header"><h3>学习排班偏好</h3></div>
+          <div class="card-body">
+            <form id="prefForm" onsubmit="return App.handleLearnPref(event)">
+              <div class="form-group">
+                <label class="form-label">输入偏好描述</label>
+                <input class="form-input" name="user_input" placeholder="如：李医生希望周一和周三上早班" required>
+              </div>
+              <button class="btn btn-primary" type="submit">学习偏好</button>
+            </form>
+            <div id="prefLearnResult" class="mt-3"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>偏好记录</h3></div>
+          <div class="card-body">
+            <button class="btn btn-outline" onclick="App.loadPreferences()" id="prefBtn">查看偏好</button>
+            <div id="prefResult" class="mt-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chat -->
+      <section class="page" id="page-chat">
+        <div class="card chat-card">
+          <div class="card-header"><h3>AI 对话助手</h3></div>
+          <div class="card-body">
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-msg chat-msg-ai">
+                <div class="msg-avatar">AI</div>
+                <div class="msg-content">
+                  <p>你好！我是医院智能排班助手，可以帮你：</p>
+                  <ul>
+                    <li>生成排班表</li>
+                    <li>调班处理</li>
+                    <li>排班查询</li>
+                    <li>冲突检测与预警</li>
+                    <li>紧急代班安排</li>
+                    <li>工作量分析</li>
+                    <li>排班质量评估</li>
+                    <li>排班偏好管理</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <form class="chat-input" id="chatForm" onsubmit="return App.handleChat(event)">
+              <input class="form-input" name="message" placeholder="输入你的需求..." autocomplete="off" required>
+              <button class="btn btn-primary" type="submit">发送</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

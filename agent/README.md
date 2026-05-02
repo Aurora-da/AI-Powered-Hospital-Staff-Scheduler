@@ -1,6 +1,6 @@
 # 🏥 医院智能排班与调班助手
 
-基于 **LLM + OR-Tools (CP-SAT)** 的医院智能排班 Agent，支持**自然语言交互**，覆盖排班生成、调班、冲突检测、紧急代班、工作量分析等全流程。
+基于 **LLM + OR-Tools (CP-SAT)** 的医院智能排班 Agent，支持**自然语言交互**，覆盖排班生成、调班、冲突检测、紧急代班、工作量分析等全流程。提供 CLI 命令行和 Web 管理界面两种使用方式。
 
 ## ✨ 功能特性
 
@@ -24,6 +24,7 @@
 
 ### 💬 交互体验
 
+- **Web 管理界面** — 清新的可视化仪表盘，支持所有操作
 - **自然语言意图识别** — LLM 自动理解用户意图
 - **对话记忆** — 自动记录上下文，支持连贯对话
 - **通用对话** — 日常闲聊与排班知识咨询
@@ -35,7 +36,9 @@
 | 编程语言 | Python 3.10+ |
 | 约束求解 | OR-Tools CP-SAT |
 | LLM 推理 | SiliconFlow API（兼容 OpenAI 格式） |
+| Web 框架 | FastAPI + Uvicorn |
 | 数据处理 | pandas, openpyxl |
+| 前端 | HTML + CSS + JavaScript（无框架依赖） |
 | 数据存储 | Excel + JSON |
 
 ## 🚀 快速开始
@@ -73,7 +76,17 @@ SILICONFLOW_MODEL=Qwen/Qwen3-Next-80B-A3B-Instruct
 | `staff_info.xlsx` | 员工信息（姓名、角色、技能等级、可用日期） |
 | `shift_config.xlsx` | 班次配置（日期、班次类型、所需人数、技能要求） |
 
-### 5. 启动智能体
+### 5. 启动方式
+
+#### 🌐 Web 管理界面（推荐）
+
+```bash
+python -m api.main
+```
+
+访问 `http://localhost:8000` 进入可视化操作界面。
+
+#### 💻 CLI 命令行
 
 ```bash
 python main.py
@@ -112,11 +125,33 @@ python main.py
 查看所有员工的偏好记录
 ```
 
+## 🌐 API 接口
+
+启动 Web 服务后，自动提供 RESTful API：
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/staff` | 获取员工列表 |
+| GET | `/api/shifts` | 获取班次配置 |
+| GET | `/api/schedule` | 查看当前排班 |
+| POST | `/api/schedule/generate` | 生成排班 |
+| POST | `/api/schedule/swap` | 调班处理 |
+| POST | `/api/schedule/query` | 查询排班 |
+| GET | `/api/conflicts` | 冲突检测 |
+| POST | `/api/emergency/substitute` | 紧急代班 |
+| GET | `/api/workload` | 工作量分析 |
+| GET | `/api/quality` | 质量评估 |
+| GET | `/api/preferences` | 查看偏好 |
+| POST | `/api/preferences/learn` | 学习偏好 |
+| POST | `/api/chat` | AI 对话 |
+
+查看完整 API 文档：启动后访问 `http://localhost:8000/docs`
+
 ## 📁 项目结构
 
 ```text
 agent/
-├── main.py                  # 主入口：交互循环和请求路由
+├── main.py                  # CLI 主入口
 ├── agent.py                 # 意图识别（LLM）
 ├── config.py                # 配置项和常量
 ├── llm_client.py            # LLM API 客户端
@@ -126,6 +161,16 @@ agent/
 ├── excel_loader.py          # Excel 数据加载
 ├── excel_exporter.py        # Excel 结果导出
 ├── chat_tools.py            # 通用对话与记忆管理
+├── api/
+│   ├── main.py              # FastAPI 应用入口
+│   ├── routes.py            # API 路由
+│   └── schemas.py           # 请求/响应模型
+├── frontend/
+│   ├── index.html           # Web 管理界面
+│   ├── css/
+│   │   └── style.css        # 样式
+│   └── js/
+│       └── app.js           # 前端逻辑
 ├── requirements.txt         # Python 依赖
 ├── doctor_scheduling_data.json  # 排班历史数据
 ├── data/
@@ -155,6 +200,7 @@ agent/
 - 每人夜班不超过 `MAX_NIGHT_SHIFTS_PER_PERSON` 次
 - 员工技能等级需满足班次要求
 - 优先分配可用日期内的员工
+- 支持按科室/部门匹配，护理部可跨科调配
 
 ## 📝 License
 
