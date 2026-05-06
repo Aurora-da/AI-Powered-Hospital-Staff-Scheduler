@@ -46,7 +46,7 @@ def solve_schedule(staff_list: list[StaffInfo], shift_list: list[ShiftConfig]) -
         for shift in shift_list:
             req_dept = shift.required_skill
             if (staff.skill_level < shift.required_level or
-                    (req_dept != "护理部" and req_dept != dept)):  # 护理可跨科，其他尽量匹配
+                    (req_dept != "护理部" and dept != "护理部" and req_dept != dept)):
                 model.Add(staff_shift[(staff.staff_id, shift.shift_id)] == 0)
 
     # 约束3：不超过最大排班数
@@ -64,15 +64,22 @@ def solve_schedule(staff_list: list[StaffInfo], shift_list: list[ShiftConfig]) -
                 model.Add(staff_shift[(staff.staff_id, shift.shift_id)] == 0)
 
     # 约束5：连续工作天数不超过 MAX_CONSECUTIVE_SHIFTS
-    # 先按员工分组每天的工作量
     for staff in staff_list:
         date_to_vars = {}
         for shift in shift_list:
             date_to_vars.setdefault(shift.date, []).append(staff_shift[(staff.staff_id, shift.shift_id)])
 
         sorted_dates = sorted(date_to_vars.keys())
+        worked_on_date = {}
+        for d in sorted_dates:
+            worked = model.NewBoolVar(f'{staff.staff_id}_worked_{d}')
+            shift_sum = sum(date_to_vars[d])
+            model.Add(shift_sum >= 1).OnlyEnforceIf(worked)
+            model.Add(shift_sum == 0).OnlyEnforceIf(worked.Not())
+            worked_on_date[d] = worked
+
         for i in range(len(sorted_dates) - MAX_CONSECUTIVE_SHIFTS):
-            window_sum = sum(date_to_vars[sorted_dates[i + j]][0] for j in range(MAX_CONSECUTIVE_SHIFTS + 1))
+            window_sum = sum(worked_on_date[sorted_dates[i + j]] for j in range(MAX_CONSECUTIVE_SHIFTS + 1))
             model.Add(window_sum <= MAX_CONSECUTIVE_SHIFTS)
 
     # 求解
