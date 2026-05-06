@@ -13,6 +13,7 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 sys.path.insert(0, str(_AGENT_DIR))
 
 from backend.routes import router as api_router
+from backend.auth import init_users
 
 app = FastAPI(title="医院智能排班与调班助手 API", version="1.0.0")
 
@@ -25,6 +26,15 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+
+# 初始化用户系统
+init_users()
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "医院智能排班系统"}
+
 
 # ---- 前端静态文件服务 ----
 FRONTEND_DIR = _PROJECT_ROOT / "frontend"

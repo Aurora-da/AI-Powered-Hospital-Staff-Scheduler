@@ -1,10 +1,11 @@
 import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from backend.schemas import (
-    SwapRequest, QueryRequest, EmergencySubstituteRequest,
+    LoginRequest, SwapRequest, QueryRequest, EmergencySubstituteRequest,
     LearnPreferenceRequest, ChatRequest,
 )
+from backend.auth import login_user, get_current_user, require_role, init_users
 from excel_loader import load_staff_info, load_shift_config
 from excel_exporter import export_schedule, export_history, export_swap_result
 from scheduler import solve_schedule
@@ -22,6 +23,29 @@ from skills import (
 from config import logger, SHIFT_KEYWORDS
 
 router = APIRouter(prefix="/api")
+
+# 启动时初始化用户密码哈希
+init_users()
+
+
+# ===== Auth =====
+
+@router.post("/auth/login")
+def login(req: LoginRequest):
+    if not req.username or not req.password:
+        raise HTTPException(400, "用户名和密码不能为空")
+    result = login_user(req.username, req.password)
+    if not result:
+        raise HTTPException(401, "用户名或密码错误")
+    return {"success": True, **result}
+
+
+@router.get("/auth/me")
+def me(request: Request):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(401, "未登录或登录已过期")
+    return {"success": True, **user}
 
 
 def _load_data():
@@ -81,20 +105,26 @@ def get_shifts():
 # ===== Schedule =====
 
 @router.get("/schedule")
-def get_schedule():
-    """获取当前排班结果"""
+def get_schedule(request: Request = None):
+    """获取当前排班结果（员工仅看自己）"""
     from config import DATA_DIR
     import os
     path = os.path.join(DATA_DIR, "schedule_result.xlsx")
     try:
         df = pd.read_excel(path, engine="openpyxl")
+        user = get_current_user(request) if request else None
+        if user and user["role"] == "staff" and "staff" in df.columns:
+            df = df[df["staff"] == user["name"]]
         return df.to_dict(orient="records")
     except FileNotFoundError:
         return []
 
 
 @router.post("/schedule/generate")
-def generate_schedule():
+def generate_schedule(request: Request, _current_user: dict = None):
+    user = get_current_user(request)
+    if not user or user["role"] != "manager":
+        raise HTTPException(403, "权限不足：仅管理层可生成排班")
     staff, shifts = _load_data()
     if not staff or not shifts:
         raise HTTPException(status_code=400, detail="员工或班次数据为空")
@@ -111,7 +141,10 @@ def generate_schedule():
 
 
 @router.post("/schedule/swap")
-def swap_shift(req: SwapRequest):
+def swap_shift(req: SwapRequest, request: Request):
+    user = get_current_user(request)
+    if not user or user["role"] != "manager":
+        raise HTTPException(403, "权限不足：仅管理层可调班")
     staff, shifts = _load_data()
     if not staff or not shifts:
         raise HTTPException(status_code=400, detail="员工或班次数据为空")
@@ -128,7 +161,7 @@ def swap_shift(req: SwapRequest):
 
 
 @router.post("/schedule/query")
-def query_schedule(req: QueryRequest):
+def query_schedule(req: QueryRequest, request: Request = None):
     from config import DATA_DIR
     import os
     path = os.path.join(DATA_DIR, "schedule_result.xlsx")
@@ -136,6 +169,9 @@ def query_schedule(req: QueryRequest):
         schedule_df = pd.read_excel(path, engine="openpyxl")
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="未找到排班结果文件，请先生成排班")
+    user = get_current_user(request) if request else None
+    if user and user["role"] == "staff":
+        req.staff_name = user["name"]  # 员工只能搜自己
     filter_cond = pd.Series([True] * len(schedule_df))
     if req.staff_name:
         filter_cond &= schedule_df["staff"] == req.staff_name
@@ -158,7 +194,10 @@ def get_conflicts():
 # ===== Emergency Substitute =====
 
 @router.post("/emergency/substitute")
-def emergency_substitute(req: EmergencySubstituteRequest):
+def emergency_substitute(req: EmergencySubstituteRequest, request: Request):
+    user = get_current_user(request)
+    if not user or user["role"] != "manager":
+        raise HTTPException(403, "权限不足：仅管理层可处理紧急代班")
     result = handle_emergency_substitution(req.staff_name, req.date, req.shift_type, req.reason)
     return {"success": True, "report": result}
 
@@ -188,7 +227,10 @@ def get_preferences():
 
 
 @router.post("/preferences/learn")
-def learn_preferences(req: LearnPreferenceRequest):
+def learn_preferences(req: LearnPreferenceRequest, request: Request):
+    user = get_current_user(request)
+    if not user or user["role"] != "manager":
+        raise HTTPException(403, "权限不足：仅管理层可管理偏好")
     result = learn_preference(req.user_input)
     return {"success": True, "report": result}
 

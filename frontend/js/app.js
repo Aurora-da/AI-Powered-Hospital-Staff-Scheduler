@@ -1,12 +1,152 @@
 const API_BASE = "/api";
 
+// ===== Auth Module =====
+const Auth = {
+  _user: null,
+
+  getToken() {
+    return localStorage.getItem("schedule_token");
+  },
+
+  setToken(token) {
+    localStorage.setItem("schedule_token", token);
+  },
+
+  clearToken() {
+    localStorage.removeItem("schedule_token");
+    this._user = null;
+  },
+
+  isLoggedIn() {
+    return !!this.getToken();
+  },
+
+  async getUser() {
+    if (this._user) return this._user;
+    try {
+      const resp = await fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${this.getToken()}` },
+      });
+      if (!resp.ok) throw new Error("unauthorized");
+      const data = await resp.json();
+      this._user = data;
+      return data;
+    } catch (e) {
+      this.clearToken();
+      return null;
+    }
+  },
+
+  isManager() {
+    return this._user && this._user.role === "manager";
+  },
+
+  async login(username, password) {
+    const resp = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: "登录失败" }));
+      throw new Error(err.detail || "用户名或密码错误");
+    }
+    const data = await resp.json();
+    this.setToken(data.token);
+    this._user = { name: data.name, role: data.role };
+    return data;
+  },
+
+  logout() {
+    this.clearToken();
+    document.getElementById("appLayout").classList.add("hidden");
+    document.getElementById("loginPage").style.display = "";
+    document.getElementById("loginError").textContent = "";
+  },
+};
+
+// ===== App Module =====
 const App = {
   currentPage: "dashboard",
 
   async init() {
+    // Check if already logged in
+    if (Auth.isLoggedIn()) {
+      const user = await Auth.getUser();
+      if (user) {
+        this.showApp();
+        return;
+      }
+    }
+    // Show login page
+    document.getElementById("loginPage").style.display = "";
+    this.setupLoginForm();
+  },
+
+  setupLoginForm() {
+    const form = document.getElementById("loginForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("loginBtn");
+      const error = document.getElementById("loginError");
+      const formData = new FormData(form);
+      const username = formData.get("username").trim();
+      const password = formData.get("password").trim();
+
+      if (!username || !password) {
+        error.textContent = "请输入用户名和密码";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "登录中...";
+      error.textContent = "";
+
+      try {
+        await Auth.login(username, password);
+        this.showApp();
+      } catch (err) {
+        error.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "登 录";
+      }
+    });
+  },
+
+  showApp() {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("appLayout").classList.remove("hidden");
+    this.applyRBAC();
     this.setupNavigation();
     this.setupSidebarToggle();
+    this.setupLogout();
+    this.updateSidebarUser();
     this.renderDashboard();
+  },
+
+  applyRBAC() {
+    const isManager = Auth.isManager();
+    document.querySelectorAll(".manager-only").forEach((el) => {
+      el.style.display = isManager ? "" : "none";
+    });
+  },
+
+  updateSidebarUser() {
+    const user = Auth._user;
+    if (!user) return;
+    document.getElementById("sidebarName").textContent = user.name;
+    document.getElementById("sidebarRole").textContent =
+      user.role === "manager" ? "管理层" : "员工";
+    document.getElementById("sidebarRole").className =
+      `user-role ${user.role === "manager" ? "role-manager" : "role-staff"}`;
+    document.getElementById("sidebarAvatar").textContent = user.name.charAt(0);
+  },
+
+  setupLogout() {
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      Auth.logout();
+    });
   },
 
   // ===== Navigation =====
@@ -36,16 +176,19 @@ const App = {
   },
 
   navigate(page) {
+    // Prevent staff from navigating to manager-only pages via URL
+    if (!Auth.isManager() && ["swap", "emergency", "preferences"].includes(page)) {
+      return;
+    }
+
     this.currentPage = page;
-    // Update nav
     document.querySelectorAll(".nav-item").forEach((el) => {
       el.classList.toggle("active", el.dataset.page === page);
     });
-    // Show page
     document.querySelectorAll(".page").forEach((el) => el.classList.remove("active"));
     const target = document.getElementById(`page-${page}`);
     if (target) target.classList.add("active");
-    // Update title
+
     const names = {
       dashboard: "工作台",
       schedule: "排班管理",
@@ -58,12 +201,10 @@ const App = {
     };
     document.getElementById("pageTitle").textContent = names[page] || page;
 
-    // Auto-load data for pages
     if (page === "dashboard") this.renderDashboard();
     if (page === "schedule") this.loadScheduleTable();
     if (page === "chat") this.scrollChatBottom();
 
-    // Close sidebar on mobile
     if (window.innerWidth <= 768) {
       document.getElementById("sidebar").classList.remove("open");
     }
@@ -72,11 +213,22 @@ const App = {
   // ===== API =====
   async apiFetch(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
-    const config = {
-      headers: { "Content-Type": "application/json" },
-      ...options,
-    };
+    const token = Auth.getToken();
+    const headers = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const config = { ...options, headers: { ...headers, ...options.headers } };
     const resp = await fetch(url, config);
+
+    if (resp.status === 401) {
+      Auth.logout();
+      throw new Error("登录已过期，请重新登录");
+    }
+    if (resp.status === 403) {
+      const err = await resp.json().catch(() => ({ detail: "权限不足" }));
+      throw new Error(err.detail || "权限不足");
+    }
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
       throw new Error(err.detail || `请求失败 (${resp.status})`);
@@ -95,11 +247,17 @@ const App = {
     `;
 
     try {
-      const [staff, shifts, schedule] = await Promise.all([
-        this.apiFetch("/staff").catch(() => []),
-        this.apiFetch("/shifts").catch(() => []),
-        this.apiFetch("/schedule").catch(() => []),
+      const results = await Promise.allSettled([
+        this.apiFetch("/staff"),
+        this.apiFetch("/shifts"),
+        this.apiFetch("/schedule"),
       ]);
+      const [staff, shifts, schedule] = results.map((r) =>
+        r.status === "fulfilled" ? r.value : [],
+      );
+      const loadErrors = results
+        .map((r, i) => (r.status === "rejected" ? ["员工", "班次", "排班"][i] : null))
+        .filter(Boolean);
 
       grid.innerHTML = `
         <div class="stat-card">
@@ -126,7 +284,13 @@ const App = {
         </div>
       `;
 
-      // Preview table
+      if (loadErrors.length > 0) {
+        const banner = document.createElement("div");
+        banner.className = "alert alert-error";
+        banner.textContent = `部分数据加载失败: ${loadErrors.join("、")}`;
+        grid.insertAdjacentElement("beforebegin", banner);
+      }
+
       const preview = document.getElementById("dashboardPreview");
       if (schedule.length > 0) {
         preview.innerHTML = this.buildTable(schedule.slice(0, 15), [
@@ -137,7 +301,7 @@ const App = {
           '<p class="text-muted">暂无排班数据，前往「排班管理」生成排班表</p>';
       }
     } catch (e) {
-      grid.innerHTML = `<div class="stat-card"><p class="text-danger">加载失败: ${e.message}</p></div>`;
+      grid.innerHTML = `<div class="stat-card"><p class="text-danger">加载失败: ${this.escapeHtml(e.message)}</p></div>`;
     }
   },
 
@@ -154,7 +318,7 @@ const App = {
         el.innerHTML = '<p class="text-muted">暂无排班数据，请先生成排班</p>';
       }
     } catch (e) {
-      el.innerHTML = `<p class="text-danger">加载失败: ${e.message}</p>`;
+      el.innerHTML = `<p class="text-danger">加载失败: ${this.escapeHtml(e.message)}</p>`;
     }
   },
 
@@ -168,12 +332,12 @@ const App = {
     try {
       const resp = await this.apiFetch("/schedule/generate", { method: "POST" });
       result.innerHTML = `<div class="alert alert-success">排班生成成功！共 ${resp.data.length} 条记录</div>`;
-      const table = document.getElementById("scheduleTable");
-      table.innerHTML = this.buildTable(resp.data, [
-        "staff", "date", "shift_type", "role", "skill_level",
-      ]);
+      document.getElementById("scheduleTable").innerHTML = this.buildTable(
+        resp.data,
+        ["staff", "date", "shift_type", "role", "skill_level"],
+      );
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     } finally {
       btn.disabled = false;
       btn.innerHTML = `
@@ -196,14 +360,14 @@ const App = {
         method: "POST",
         body: JSON.stringify(data),
       });
-      result.innerHTML = `<div class="alert alert-success">调班成功！</div>`;
+      result.innerHTML = '<div class="alert alert-success">调班成功！</div>';
       const logs = resp.logs || [];
       if (logs.length > 0) {
         result.innerHTML +=
-          '<div class="report-box">' + logs.join("\n") + "</div>";
+          '<div class="report-box">' + this.escapeHtml(logs.join("\n")) + "</div>";
       }
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     }
   },
 
@@ -220,7 +384,7 @@ const App = {
       const report = resp.report || "检测完成，无冲突报告";
       result.innerHTML = `<div class="report-box">${this.escapeHtml(report)}</div>`;
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     } finally {
       btn.disabled = false;
       btn.innerHTML = `
@@ -246,7 +410,7 @@ const App = {
       const report = resp.report || "未找到合适代班人员";
       result.innerHTML = `<div class="report-box">${this.escapeHtml(report)}</div>`;
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     }
   },
 
@@ -263,7 +427,7 @@ const App = {
       const report = resp.report || "分析完成";
       result.innerHTML = `<div class="report-box">${this.escapeHtml(report)}</div>`;
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     } finally {
       btn.disabled = false;
       btn.innerHTML = `
@@ -286,7 +450,7 @@ const App = {
       const report = resp.report || "评估完成";
       result.innerHTML = `<div class="report-box">${this.escapeHtml(report)}</div>`;
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     } finally {
       btn.disabled = false;
       btn.innerHTML = `
@@ -312,7 +476,7 @@ const App = {
       result.innerHTML = `<div class="report-box">${this.escapeHtml(report)}</div>`;
       form.reset();
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     }
   },
 
@@ -325,7 +489,7 @@ const App = {
       const report = resp.report || "暂无偏好记录";
       result.innerHTML = `<div class="report-box">${this.escapeHtml(report)}</div>`;
     } catch (e) {
-      result.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+      result.innerHTML = `<div class="alert alert-error">${this.escapeHtml(e.message)}</div>`;
     }
   },
 
@@ -337,12 +501,10 @@ const App = {
     const message = input.value.trim();
     if (!message) return;
 
-    // Add user message
     this.addChatMessage(message, "user");
     input.value = "";
     this.scrollChatBottom();
 
-    // Show typing indicator
     const typingId = this.addChatMessage("正在思考...", "ai typing");
     this.scrollChatBottom();
 
@@ -352,7 +514,6 @@ const App = {
         body: JSON.stringify({ message }),
       });
 
-      // Remove typing indicator
       const typing = document.getElementById(typingId);
       if (typing) typing.remove();
 
@@ -411,15 +572,17 @@ const App = {
     data.forEach((row) => {
       html += "<tr>";
       columns.forEach((col) => {
-        let val = row[col] ?? "-";
+        const raw = row[col] ?? "-";
+        const escaped = this.escapeHtml(String(raw));
         if (col === "shift_type") {
           const tagMap = { 早班: "tag-blue", 中班: "tag-green", 夜班: "tag-purple" };
-          const cls = tagMap[val] || "tag-blue";
-          val = `<span class="tag ${cls}">${val}</span>`;
+          const cls = tagMap[raw] || "tag-blue";
+          html += `<td><span class="tag ${cls}">${escaped}</span></td>`;
         } else if (col === "skill_level") {
-          val = `<span class="tag tag-yellow">Lv.${val}</span>`;
+          html += `<td><span class="tag tag-yellow">Lv.${escaped}</span></td>`;
+        } else {
+          html += `<td>${escaped}</td>`;
         }
-        html += `<td>${val}</td>`;
       });
       html += "</tr>";
     });
