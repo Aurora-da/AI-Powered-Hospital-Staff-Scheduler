@@ -35,7 +35,7 @@
 |------|------|
 | 编程语言 | Python 3.10+ |
 | 约束求解 | OR-Tools CP-SAT |
-| LLM 推理 | SiliconFlow API（兼容 OpenAI 格式） |
+| LLM 推理 | DeepSeek API（兼容 OpenAI 格式） |
 | Web 框架 | FastAPI + Uvicorn |
 | 数据处理 | pandas, openpyxl |
 | 前端 | HTML + CSS + JavaScript（无框架依赖） |
@@ -67,11 +67,11 @@ cp .env.example .env
 编辑 `.env` 文件：
 
 ```env
-SILICONFLOW_API_KEY=your_api_key_here
-SILICONFLOW_MODEL=Qwen/Qwen3-Next-80B-A3B-Instruct
+DEEPSEEK_API_KEY=your_api_key_here
+DEEPSEEK_MODEL=deepseek-chat
 ```
 
-> 默认使用 SiliconFlow 的免费模型 Qwen3-Next-80B-A3B-Instruct，仅需配置 API Key。
+> 默认使用 DeepSeek-V3 模型（deepseek-chat），仅需配置 API Key。
 
 ### 4. 准备数据
 
@@ -89,7 +89,7 @@ SILICONFLOW_MODEL=Qwen/Qwen3-Next-80B-A3B-Instruct
 ```bash
 # 1. 配置 API Key
 cp .env.example .env
-# 编辑 .env，填入真实的 SILICONFLOW_API_KEY
+# 编辑 .env，填入真实的 DEEPSEEK_API_KEY
 
 # 2. 一键启动
 docker compose up -d

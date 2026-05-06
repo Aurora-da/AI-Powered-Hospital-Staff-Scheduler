@@ -1,14 +1,14 @@
 import requests
 import time
-from config import API_URL, SILICONFLOW_API_KEY, MODEL_NAME, LLM_MAX_RETRIES, logger
+from config import API_URL, DEEPSEEK_API_KEY, MODEL_NAME, LLM_MAX_RETRIES, logger
 
 def chat(prompt: str) -> str:
     """调用LLM接口，带重试机制"""
-    if not SILICONFLOW_API_KEY:
-        raise ValueError("未配置SILICONFLOW_API_KEY，请检查.env文件")
-    
+    if not DEEPSEEK_API_KEY:
+        raise ValueError("未配置DEEPSEEK_API_KEY，请检查.env文件")
+
     headers = {
-        "Authorization": f"Bearer {SILICONFLOW_API_KEY}",
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json",
     }
     data = {
